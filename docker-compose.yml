@@ -1,0 +1,252 @@
+version: '3.8'
+
+services:
+  # ZOOKEEPER ENSEMBLE (3 nodes) - KEEPING THIS
+  zookeeper1:
+    image: confluentinc/cp-zookeeper:7.6.1
+    hostname: zookeeper1
+    container_name: zookeeper1
+    environment:
+      ZOOKEEPER_SERVER_ID: 1
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+      ZOOKEEPER_INIT_LIMIT: 5
+      ZOOKEEPER_SYNC_LIMIT: 2
+      ZOOKEEPER_SERVERS: zookeeper1:2888:3888;zookeeper2:2888:3888;zookeeper3:2888:3888
+    restart: unless-stopped
+    networks:
+      - csc5355-network
+
+  zookeeper2:
+    image: confluentinc/cp-zookeeper:7.6.1
+    hostname: zookeeper2
+    container_name: zookeeper2
+    environment:
+      ZOOKEEPER_SERVER_ID: 2
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+      ZOOKEEPER_INIT_LIMIT: 5
+      ZOOKEEPER_SYNC_LIMIT: 2
+      ZOOKEEPER_SERVERS: zookeeper1:2888:3888;zookeeper2:2888:3888;zookeeper3:2888:3888
+    restart: unless-stopped
+    networks:
+      - csc5355-network
+
+  zookeeper3:
+    image: confluentinc/cp-zookeeper:7.6.1
+    hostname: zookeeper3
+    container_name: zookeeper3
+    environment:
+      ZOOKEEPER_SERVER_ID: 3
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+      ZOOKEEPER_INIT_LIMIT: 5
+      ZOOKEEPER_SYNC_LIMIT: 2
+      ZOOKEEPER_SERVERS: zookeeper1:2888:3888;zookeeper2:2888:3888;zookeeper3:2888:3888
+    restart: unless-stopped
+    networks:
+      - csc5355-network
+
+  # KAFKA CLUSTER (3 brokers) - KEEPING THIS
+  kafka1:
+    image: confluentinc/cp-kafka:7.6.1
+    hostname: kafka1
+    container_name: kafka1
+    depends_on:
+      - zookeeper1
+      - zookeeper2
+      - zookeeper3
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper1:2181,zookeeper2:2181,zookeeper3:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka1:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 3
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 2
+      KAFKA_MIN_INSYNC_REPLICAS: 2
+      KAFKA_DEFAULT_REPLICATION_FACTOR: 3
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+    restart: unless-stopped
+    networks:
+      - csc5355-network
+
+  kafka2:
+    image: confluentinc/cp-kafka:7.6.1
+    hostname: kafka2
+    container_name: kafka2
+    depends_on:
+      - zookeeper1
+      - zookeeper2
+      - zookeeper3
+    ports:
+      - "9093:9092"
+    environment:
+      KAFKA_BROKER_ID: 2
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper1:2181,zookeeper2:2181,zookeeper3:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka2:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 3
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 2
+      KAFKA_MIN_INSYNC_REPLICAS: 2
+      KAFKA_DEFAULT_REPLICATION_FACTOR: 3
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+    restart: unless-stopped
+    networks:
+      - csc5355-network
+
+  kafka3:
+    image: confluentinc/cp-kafka:7.6.1
+    hostname: kafka3
+    container_name: kafka3
+    depends_on:
+      - zookeeper1
+      - zookeeper2
+      - zookeeper3
+    ports:
+      - "9094:9092"
+    environment:
+      KAFKA_BROKER_ID: 3
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper1:2181,zookeeper2:2181,zookeeper3:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka3:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 3
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 2
+      KAFKA_MIN_INSYNC_REPLICAS: 2
+      KAFKA_DEFAULT_REPLICATION_FACTOR: 3
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+    restart: unless-stopped
+    networks:
+      - csc5355-network
+
+  # CASSANDRA - SINGLE NODE (REVERTING)
+  cassandra:
+    image: cassandra:4.1
+    hostname: cassandra
+    container_name: cassandra
+    ports:
+      - "9042:9042"
+    environment:
+      - CASSANDRA_CLUSTER_NAME=csc5355
+      - CASSANDRA_DC=datacenter1
+    volumes:
+      - cassandra-data:/var/lib/cassandra
+    restart: unless-stopped
+    networks:
+      - csc5355-network
+
+  # REST OF SERVICES UNCHANGED
+  nginx-lb:
+    image: nginx:alpine
+    ports:
+      - "8080:80"
+    volumes:
+      - ./nginx-lb/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - web1
+      - web2
+      - web3
+    restart: unless-stopped
+    networks:
+      - csc5355-network
+
+  web1:
+    image: nginx:alpine
+    volumes:
+      - ./nginx-web/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx-web/html:/usr/share/nginx/html:ro
+    restart: unless-stopped
+    networks:
+      - csc5355-network
+
+  web2:
+    image: nginx:alpine
+    volumes:
+      - ./nginx-web/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx-web/html:/usr/share/nginx/html:ro
+    restart: unless-stopped
+    networks:
+      - csc5355-network
+
+  web3:
+    image: nginx:alpine
+    volumes:
+      - ./nginx-web/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx-web/html:/usr/share/nginx/html:ro
+    restart: unless-stopped
+    networks:
+      - csc5355-network
+
+  fluent-bit:
+    image: fluent/fluent-bit:2.2
+    ports:
+      - "514:514/udp"
+    volumes:
+      - ./fluent-bit/fluent-bit.conf:/fluent-bit/etc/fluent-bit.conf
+    depends_on:
+      - kafka1
+      - kafka2
+      - kafka3
+    restart: unless-stopped
+    networks:
+      - csc5355-network
+
+  consumer-log:
+    image: python:3.11-slim
+    depends_on:
+      - cassandra
+      - kafka1
+      - kafka2
+      - kafka3
+    restart: unless-stopped
+    volumes:
+      - ./scripts:/app
+    working_dir: /app
+    environment:
+      - KAFKA_BOOTSTRAP=kafka1:9092,kafka2:9092,kafka3:9092
+      - CASSANDRA_HOSTS=cassandra
+    command: >
+      sh -c "pip install kafka-python cassandra-driver &&
+             python consumer_log.py"
+    networks:
+      - csc5355-network
+
+  kafka-streams-aggregation:
+    image: kafka-streams-aggregation:1.0.0
+    depends_on:
+      - kafka1
+      - kafka2
+      - kafka3
+      - cassandra
+    restart: unless-stopped
+    environment:
+      - TOP_N=3
+      - PERIOD_MINUTES=5
+      - KAFKA_BOOTSTRAP=kafka1:9092,kafka2:9092,kafka3:9092
+      - CASSANDRA_CONTACT_POINTS=cassandra
+    networks:
+      - csc5355-network
+
+  batch-processor:
+    image: python:3.11-slim
+    depends_on:
+      - cassandra
+    restart: unless-stopped
+    volumes:
+      - ./scripts:/app
+    working_dir: /app
+    environment:
+      - TZ=Africa/Casablanca
+      - TOP_N=3
+      - CASSANDRA_HOSTS=cassandra
+    command: ["sh", "-c", "pip install cassandra-driver schedule && python -u batch_scheduler.py"]
+    networks:
+      - csc5355-network
+
+networks:
+  csc5355-network:
+    driver: bridge
+
+volumes:
+  cassandra-data:

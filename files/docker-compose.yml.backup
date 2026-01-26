@@ -1,0 +1,105 @@
+version: "3.9"
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.6.1
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+  kafka:
+    image: confluentinc/cp-kafka:7.6.1
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+  cassandra:
+    image: cassandra:4.1
+    ports:
+      - "9042:9042"
+    volumes:
+      - cassandra-data:/var/lib/cassandra
+    environment:
+      CASSANDRA_CLUSTER_NAME: "csc5355"
+  fluent-bit:
+    image: fluent/fluent-bit:2.2
+    depends_on:
+      - kafka
+    ports:
+      - "514:514/udp"
+    volumes:
+      - ./fluent-bit/fluent-bit.conf:/fluent-bit/etc/fluent-bit.conf:ro
+      - ./fluent-bit/parsers.conf:/fluent-bit/etc/parsers.conf:ro
+    command: ["fluent-bit", "-c", "/fluent-bit/etc/fluent-bit.conf"]
+  web1:
+    image: nginx:alpine
+    depends_on:
+      - fluent-bit
+    volumes:
+      - ./nginx-web/nginx.conf:/etc/nginx/nginx.conf:ro
+  web2:
+    image: nginx:alpine
+    depends_on:
+      - fluent-bit
+    volumes:
+      - ./nginx-web/nginx.conf:/etc/nginx/nginx.conf:ro
+  web3:
+    image: nginx:alpine
+    depends_on:
+      - fluent-bit
+    volumes:
+      - ./nginx-web/nginx.conf:/etc/nginx/nginx.conf:ro
+  nginx-lb:
+    image: nginx:alpine
+    depends_on:
+      - web1
+      - web2
+      - web3
+    ports:
+      - "8080:80"
+    volumes:
+      - ./nginx-lb/nginx.conf:/etc/nginx/nginx.conf:ro
+  consumer-log:
+    image: python:3.11-slim
+    depends_on:
+      - kafka
+      - cassandra
+    restart: unless-stopped
+    volumes:
+      - ./scripts:/app
+    working_dir: /app
+    command: >
+      sh -c "pip install kafka-python cassandra-driver &&
+             python consumer_log.py"
+  
+  kafka-streams-aggregation:
+    image: kafka-streams-aggregation:1.0.0
+    depends_on:
+      - kafka
+      - cassandra
+    restart: unless-stopped
+    environment:
+      - TOP_N=3
+      - PERIOD_MINUTES=5
+      - KAFKA_BOOTSTRAP=kafka:9092
+      - CASSANDRA_HOST=cassandra
+    
+  batch-processor:
+    image: python:3.11-slim
+    depends_on:
+      - cassandra
+    restart: unless-stopped
+    volumes:
+      - ./scripts:/app
+    working_dir: /app
+    environment:
+      - TZ=Africa/Casablanca
+      - TOP_N=3
+    command: ["sh", "-c", "pip install cassandra-driver schedule && python -u batch_scheduler.py"]
+volumes:
+  cassandra-data:
