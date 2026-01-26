@@ -143,17 +143,17 @@ csc5355-pipeline/
 +-- docker-compose.yml
 +-- README.md
 +-- fluent-bit/
-�   +-- fluent-bit.conf
-�   +-- parsers.conf
+   +-- fluent-bit.conf
+   +-- parsers.conf
 +-- nginx-lb/
-�   +-- nginx.conf
+   +-- nginx.conf
 +-- nginx-web/
-�   +-- nginx.conf
+   +-- nginx.conf
 +-- scripts/
-�   +-- consumer_log.py
-�   +-- batch_aggregation.py
-�   +-- batch_scheduler.py
-�   +-- generate_traffic.ps1
+   +-- consumer_log.py
+   +-- batch_aggregation.py
+   +-- batch_scheduler.py
+   +-- generate_traffic.ps1
 +-- kafka-streams-aggregation/
     +-- Dockerfile
     +-- pom.xml
@@ -212,13 +212,6 @@ Wait 60-90 seconds after starting for Cassandra to fully initialize.
 ## License
 Educational project for CSC5355 course.
 
-## Professor
-Dr. Tajjeeddine Rachidi
+## Author
+- Aicha Ajdid
 
-## Authors
-- Yasmin Mahyaoui 
-- Khaoula Chrifi Alaoui 
-- Rania Khaoudane 
-- Ghita Sbai
-
-December 2025
