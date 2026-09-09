@@ -210,5 +210,6 @@ Wait 60-90 seconds after starting for Cassandra to fully initialize.
 - Throughput: ~200 requests/second tested
 
 ## Author
-- Aicha Ajdid
+
+Aicha Ajdid — [LinkedIn](https://linkedin.com/in/aicha-ajdid-50836626b) · [GitHub](https://github.com/AICHAAAAH)
 
