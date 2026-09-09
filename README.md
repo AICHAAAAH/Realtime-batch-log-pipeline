@@ -104,7 +104,7 @@ docker compose ps
 
 # Verify data
 docker compose exec cassandra cqlsh -e "SELECT COUNT(*) FROM csc5355.LOG;"
-dSELECT * FROM csc5355.RESULTS WHERE process_type='batch' LIMIT 10 ALLOW FILTERING;
+SELECT * FROM csc5355.RESULTS WHERE process_type='batch' LIMIT 10 ALLOW FILTERING;
 ```
 
 ## Data Models
