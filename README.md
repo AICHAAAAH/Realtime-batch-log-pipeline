@@ -209,9 +209,6 @@ Wait 60-90 seconds after starting for Cassandra to fully initialize.
 - Batch processing: 6,000+ records
 - Throughput: ~200 requests/second tested
 
-## License
-Educational project for CSC5355 course.
-
 ## Author
 - Aicha Ajdid
 
