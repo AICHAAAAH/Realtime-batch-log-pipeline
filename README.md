@@ -1,4 +1,4 @@
-# CSC5355 Project - Real-time & Batch Access Log Processing
+# Real-time & Batch Access Log Processing
 
 ## Project Overview
 A scalable pipeline for real-time and batch processing of web server access logs using Kafka Streams for stream processing and scheduled batch jobs for daily aggregation.
